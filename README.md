@@ -278,14 +278,43 @@ that produced it:
 **Happy path**
 
 ```
+[1] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: 10 items: Y2K Baby Tee — Butterfly Print, Graphic Tee — 2003 Tour Bootleg Style, Vintage Band Tee — Faded Grey … +7 more
+[2] suggest_outfit
+      in:  dict with keys: new_item, wardrobe
+      out: jeans and sneakers
+[3] create_fit_card
+      in:  dict with keys: outfit, new_item
+      out: Fit card for lst_002
 
 ```
 
 **Empty search**
 
 ```
+[1] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: [] (empty)
+[2] stop
+      out: No listings matched. Try changing the description, size, or maximum price.
+      →    empty search; change the description, size, or maximum price
 
 ```
+
+The three failure checks produced these user-facing messages:
+
+```
+empty search: No listings matched. Try changing the description, size, or maximum price.
+empty wardrobe with unavailable model: The model could not be reached while creating the outfit advice. Check GEMINI_API_KEY and try again.
+model unavailable: The model could not be reached while creating the outfit advice. Check GEMINI_API_KEY and try again.
+```
+
+This checkout had no `.env` key to mutate, so the model-unavailable case was
+triggered with the same `ModelUnavailable` exception that an invalid key raises;
+the handler was verified on a previously unused query. The empty-wardrobe run
+also reached `suggest_outfit` with `items: []` and returned the same clear
+model-availability message instead of a traceback or empty string.
 
 **On the MCP move:** <!-- what changed in your code, and whether anything
 behaved differently afterwards. If the rewire didn't work, say exactly where it

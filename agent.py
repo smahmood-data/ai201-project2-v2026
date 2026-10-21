@@ -145,11 +145,21 @@ def run_agent(query: str, wardrobe: dict) -> dict:
         "max_price": session["parsed"]["max_price"],
     })
     session["search_results"] = results
+    trace.step(
+        "search_listings (via MCP)",
+        inputs=session["parsed"],
+        returned=session["search_results"],
+    )
 
     if not session["search_results"]:
         session["error"] = (
             "No listings matched. Try changing the description, size, or "
             "maximum price."
+        )
+        trace.step(
+            "stop",
+            returned=session["error"],
+            note="empty search; change the description, size, or maximum price",
         )
         return session
 
@@ -157,14 +167,40 @@ def run_agent(query: str, wardrobe: dict) -> dict:
 
     iterations += 1
     trace.check_iterations(iterations)
-    session["outfit_suggestion"] = suggest_outfit(
-        session["selected_item"], session["wardrobe"]
+    try:
+        session["outfit_suggestion"] = suggest_outfit(
+            session["selected_item"], session["wardrobe"]
+        )
+    except ModelUnavailable:
+        session["error"] = (
+            "The model could not be reached while creating the outfit advice. "
+            "Check GEMINI_API_KEY and try again."
+        )
+        trace.step("suggest_outfit", inputs={"new_item": session["selected_item"]}, returned=session["error"])
+        return session
+    trace.step(
+        "suggest_outfit",
+        inputs={"new_item": session["selected_item"], "wardrobe": session["wardrobe"]},
+        returned=session["outfit_suggestion"],
     )
 
     iterations += 1
     trace.check_iterations(iterations)
-    session["fit_card"] = create_fit_card(
-        session["outfit_suggestion"], session["selected_item"]
+    try:
+        session["fit_card"] = create_fit_card(
+            session["outfit_suggestion"], session["selected_item"]
+        )
+    except ModelUnavailable:
+        session["error"] = (
+            "The model could not be reached while creating the fit card. "
+            "Check GEMINI_API_KEY and try again."
+        )
+        trace.step("create_fit_card", inputs={"outfit": session["outfit_suggestion"]}, returned=session["error"])
+        return session
+    trace.step(
+        "create_fit_card",
+        inputs={"outfit": session["outfit_suggestion"], "new_item": session["selected_item"]},
+        returned=session["fit_card"],
     )
     return session
 
