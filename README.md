@@ -59,24 +59,24 @@
 
 ### `search_listings`
 
-- **What it does:**
-- **Inputs:** <!-- name and type each: `max_price` (float), not "a price" -->
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Searches the listing records for description keywords, with optional size and inclusive maximum-price filters, and ranks matches by keyword overlap.
+- **Inputs:** `description` (str), `size` (str | None), `max_price` (float | None).
+- **Returns:** A list of listing dicts, each with `id`, `title`, `description`, `category`, `style_tags`, `size`, `condition`, `price`, `colors`, `brand`, and `platform`, ordered best match first and limited to `SEARCH_RESULT_LIMIT`.
+- **When it has nothing:** Returns an empty list when no listing matches the description and supplied filters; size matching is case-insensitive and recognizes a requested size token within a compound size such as `S/M`.
 
 ### `suggest_outfit`
 
-- **What it does:**
-- **Inputs:**
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Suggests one or two outfits built around a selected listing and the user's wardrobe, or gives general styling ideas when the wardrobe is empty.
+- **Inputs:** `new_item` (dict listing), `wardrobe` (dict with an `items` list of wardrobe-item dicts containing `id`, `name`, `category`, `colors`, `style_tags`, and optional `notes`).
+- **Returns:** A non-empty string containing outfit suggestions that names wardrobe pieces when available, or general styling advice for the listing when `wardrobe["items"]` is empty.
+- **When it has nothing:** Returns a non-empty general-styling-advice string for an empty wardrobe; it does not return an empty string or raise an exception.
 
 ### `create_fit_card`
 
-- **What it does:**
-- **Inputs:**
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Writes a short, post-ready caption for the selected listing using the proposed outfit and its overall vibe.
+- **Inputs:** `outfit` (str), `new_item` (dict listing with `title`, `price`, and `platform`).
+- **Returns:** A two-to-four-sentence string that mentions the item, its price, and its platform once each and describes the outfit's vibe.
+- **When it has nothing:** Returns a descriptive message when `outfit` is empty or whitespace, instead of raising an exception or calling the model.
 
 ---
 
@@ -94,6 +94,10 @@
      function have to be real. -->
 
 **Branch rule:**
+
+If `search_listings` returns an empty list, put a message in the session and stop. Otherwise, take the first result and go to `suggest_outfit`.
+
+**Spec question:** Could someone else build these tools from this description without asking me anything? The remaining gap is the exact wording of the descriptive message for an empty `outfit`; the implementation should choose a clear message such as `No outfit suggestion was available to turn into a fit card.`
 
 **Where it lives:** `agent.py::run_agent`
 
