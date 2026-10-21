@@ -101,7 +101,9 @@ If `search_listings` returns an empty list, put a message in the session and sto
 
 **Where it lives:** `agent.py::run_agent`
 
-**How the query is parsed:** <!-- regex, string splitting, or asking the model — say which -->
+**How the query is parsed:** A regular expression extracts an optional `size`
+constraint and an optional `max_price` from phrases such as `size M` and
+`under $30`; the remaining words become the description passed to search.
 
 **What moves through the session:** <!-- which fields, in what order -->
 
