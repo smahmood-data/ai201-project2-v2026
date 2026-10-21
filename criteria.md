@@ -25,9 +25,9 @@ Given a query that matches at least one listing, the agent completes all three
 tool calls and returns a fit card — in at least 4 of 5 tries.
 
 **Why this target:**
-<!-- Why 4 of 5 and not 5 of 5? Something about your search, probably —
-     "my search is a plain keyword match and some phrasings will miss" is a
-     real answer. -->
+I picked 4 of 5 because the search is a plain keyword match and an otherwise
+reasonable phrasing may miss the listing, but a matching query should usually
+make it through the loop.
 
 ---
 
@@ -37,65 +37,52 @@ Given a query that matches no listings, the agent stops before calling
 `suggest_outfit` and returns a message naming what to change — 5 of 5 tries.
 
 **Why this target:**
-<!-- Why is 5 of 5 reasonable here when criterion 1 isn't? What's different
-     about this path? -->
+I picked 5 of 5 because this path depends only on the deterministic empty-list
+branch, not on model wording or fuzzy matching, so it should never call the
+next tool with no item.
 
 ---
 
 ## 3. Something about state
 
-<!-- YOU WRITE THIS ONE.
-
-     How would you know that the item your search found is the same item the
-     next tool received? Name something countable or observable.
-
-     This is the criterion people find hardest, because state failure doesn't
-     look like state failure — it looks like a tool problem. Something that
-     compares session["selected_item"] against what actually reached
-     suggest_outfit is the shape you're after. -->
+For 5 of 5 matching runs, `session["selected_item"]["id"]` equals the
+`new_item["id"]` received by `suggest_outfit`, and that id is the first result's
+id from `session["search_results"]`.
 
 
 
 **Why this target:**
-
+I picked 5 of 5 because copying one selected dictionary through the session is
+deterministic and is the core state handoff the loop controls.
 
 
 ---
 
 ## 4. Something about the fit card
 
-<!-- YOU WRITE THIS ONE.
-
-     The fit card calls a model, so the same input can produce different words
-     each time. That's not a bug — it's the nature of the tool. So what would
-     make it acceptable?
-
-     Think about what you'd actually be unhappy to see. A caption that never
-     mentions the price? Two different items producing the same opening
-     sentence? A card longer than a caption anyone would post? Any of those can
-     be turned into a number. -->
+For 4 of 5 fit-card calls, the result is a 2-to-4-sentence caption that names
+the selected item, price, platform, and outfit vibe; the exact wording may
+vary between calls.
 
 
 
 **Why this target:**
-
+I picked 4 of 5 because model output is variable, so one occasional formatting
+miss is tolerable, while omitting the item or price makes the card unusable.
 
 
 ---
 
 ## 5. Your choice
 
-<!-- YOU WRITE THIS ONE TOO.
-
-     Pick something you actually care about getting right. Speed, the empty
-     wardrobe path, what happens when the model can't be reached, whether the
-     search respects a price ceiling — anything, as long as it names a number
-     or an observable outcome. -->
+For 5 of 5 searches given a `max_price`, every returned listing has a numeric
+`price` less than or equal to that ceiling, including when the ceiling is zero.
 
 
 
 **Why this target:**
-
+I picked 5 of 5 because the price filter is a direct comparison in local data,
+and returning an item over budget would violate the user's clearest constraint.
 
 
 ---
