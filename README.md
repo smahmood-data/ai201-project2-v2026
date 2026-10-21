@@ -231,17 +231,63 @@ while creating the outfit advice. Check GEMINI_API_KEY and try again.` The real
 
 | Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
 |---|---|---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |  |  |
+| 1. Full three-tool run returns a fit card | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 2. Empty search stops before `suggest_outfit` | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 3. Item in session matches item passed on | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 4. Fit card meets caption requirements | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 5. Over-budget search returns nothing over limit | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
 
 **Real output from one try**, pasted as text, naming the file and function
 that produced it:
 
+`results/run_2026-10-21_1900_before.md`, produced by
+`run_eval.py::run_once` calling `agent.py::run_agent`:
+
+**Criterion 1, matching query, Try 1**
+
+```
+- stopped early: no
+- selected_item: Y2K Baby Tee — Butterfly Print ($18.0, depop)
+- search_results: 10
+Fit card:
+Channeling major 2000s energy with this dreamy Y2K Baby Tee — Butterfly Print. Snagged it for just $18 over on depop and paired it with baggy denim for the ultimate high-low street fit. Butterflies really are back and better than ever. 🦋✨
 ```
 
+**Criterion 2, impossible query, Try 1**
+
+```
+[1] search_listings (via MCP)
+      out: [] (empty)
+[2] stop
+      out: No listings matched. Try changing the description, size, or maximum price.
+```
+
+**Criterion 3, state handoff, Try 1**
+
+```
+- selected_item: 90s Track Jacket — Navy/White Stripe ($45.0, poshmark)
+Trace:
+[1] search_listings (via MCP)
+      out: 10 items: 90s Track Jacket — Navy/White Stripe, 90s Leather Bomber — Black, 90s Silk Slip Dress — Floral, Midi Length … +7 more
+[2] suggest_outfit
+      out: Here is a practical styling suggestion using the 90s Champion track jacket and pieces from your current wardrobe…
+```
+
+**Criterion 4, same item fit-card run, Try 1**
+
+```
+- selected_item: Y2K Baby Tee — Butterfly Print ($18.0, depop)
+Fit card:
+Channeling peak 2000s energy with baggy denim and this sweet little Y2K Baby Tee — Butterfly Print I scored for just $18.
+```
+
+**Criterion 5, over-budget query, Try 1**
+
+```
+Query: graphic tee under $5
+[1] search_listings (via MCP)
+      out: [] (empty)
+- search_results: 0
 ```
 
 ---
