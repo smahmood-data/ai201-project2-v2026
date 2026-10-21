@@ -41,7 +41,12 @@
 
 <!-- Three or four sentences: what a user asks for, and what they get back. -->
 
-
+FitFindr accepts a natural-language request for a secondhand clothing item,
+including optional size and maximum price constraints. It searches the local
+listing data and selects the best matching result. It then combines that item
+with the user's wardrobe to suggest an outfit and writes a short fit-card
+caption. If nothing matches, it stops early and explains which search
+constraints the user can change.
 
 ---
 
@@ -105,7 +110,9 @@ If `search_listings` returns an empty list, put a message in the session and sto
 constraint and an optional `max_price` from phrases such as `size M` and
 `under $30`; the remaining words become the description passed to search.
 
-**What moves through the session:** <!-- which fields, in what order -->
+**What moves through the session:** `parsed` feeds `search_results`, the first
+result becomes `selected_item`, that item and `wardrobe` produce
+`outfit_suggestion`, and the suggestion plus selected item produce `fit_card`.
 
 ---
 
@@ -119,7 +126,8 @@ constraint and an optional `max_price` from phrases such as `size M` and
 **One full query**
 
 ```
-$ python app.py ask '...'
+$ .venv/bin/python -c "import agent; from utils.data_loader import get_example_wardrobe; seen=[]; agent.suggest_outfit=lambda item,wardrobe: (seen.append(item['id']) or 'jeans and sneakers'); agent.create_fit_card=lambda outfit,item: 'Fit card for ' + item['id']; session=agent.run_agent('vintage graphic tee under \$30', get_example_wardrobe()); print({'parsed':session['parsed'],'selected_item':session['selected_item']['id'],'suggest_outfit_received':seen[0],'outfit_suggestion':session['outfit_suggestion'],'fit_card':session['fit_card']})"
+{'parsed': {'description': 'vintage graphic tee', 'size': None, 'max_price': 30.0}, 'selected_item': 'lst_002', 'suggest_outfit_received': 'lst_002', 'outfit_suggestion': 'jeans and sneakers', 'fit_card': 'Fit card for lst_002'}
 
 ```
 
@@ -164,15 +172,24 @@ including the empty-wardrobe branch and three different fit-card outputs.
 
 **Moment 1**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I asked for a buildable contract for each tool, including
+  typed inputs, concrete returned fields, and an empty case.
+- *What came back:* The useful specification distinguished an empty listing
+  result (`[]`) from a non-empty outfit string and identified the listing and
+  wardrobe fields the tools actually receive.
+- *What I changed:* I wrote those contracts into Tool Inventory and used the
+  empty-list choice as the loop's branch condition.
 
 **Moment 2**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I asked for a session-based loop that behaves differently
+  on a match and a no-match query.
+- *What came back:* The first implementation idea could have passed values
+  directly between calls, which would hide whether the selected item survived
+  the handoff.
+- *What I changed:* I stored `search_results`, `selected_item`, and
+  `outfit_suggestion` in the session and tested that the selected ID received
+  by `suggest_outfit` matched the search result ID.
 
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 
