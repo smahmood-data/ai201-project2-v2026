@@ -211,6 +211,15 @@ while creating the outfit advice. Check GEMINI_API_KEY and try again.` The real
   `outfit_suggestion` in the session and tested that the selected ID received
   by `suggest_outfit` matched the search result ID.
 
+**Moment 3**
+
+- *What I asked for:* I asked for a five-try before/after evaluation and a
+  diagnosis-led improvement.
+- *What came back:* The live runs passed every criterion, but the fit-card
+  prompt still allowed headings or extra analysis.
+- *What I changed:* I changed only `create_fit_card`'s prompt to request a
+  clean 2-to-4 sentence caption, then reran all 40 live calls after the change.
+
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 
      Don't fill these in during unit 3.
@@ -415,7 +424,14 @@ model-availability message instead of a traceback or empty string.
 behaved differently afterwards. If the rewire didn't work, say exactly where it
 broke — the error text and the last thing that worked. That earns the point in
 full. -->
+`mcp_server.py` now registers `search_listings` with typed `description`,
+optional `size`, and optional `max_price` inputs. `agent.py::run_agent` calls
+it through `mcp_client.call_tool` instead of the local function. The MCP client
+returned the same listing dictionaries and empty-list result as the direct
+tool, and the end-to-end branch behaved the same; no observable behavior
+changed except that the search crossed the MCP boundary.
 
+**Repository URL:** https://github.com/smahmood-data/ai201-project2-v2026
 
 
 ---
@@ -428,21 +444,28 @@ full. -->
      `python run_eval.py --label after` -->
 
 **What I changed:**
+I tightened the `create_fit_card` prompt to request only a 2-to-4 sentence
+caption with the item, price, platform, and vibe, without headings, bullets, or
+analysis.
 
 **Which failure it was meant to fix:**
+No criterion was missed. This was a proactive tightening based on criterion 4,
+which passed 5/5 despite having a 4/5 target.
 
 ### Run Log — After
 
 | Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
 |---|---|---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |  |  |
+| 1. Full three-tool run returns a fit card | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 2. Empty search stops before `suggest_outfit` | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 3. Item in session matches item passed on | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 4. Fit card meets caption requirements | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 5. Over-budget search returns nothing over limit | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
 
 **Did it help, and how do I know:**
-
+Yes qualitatively: all five criteria remained 5/5, and the fit-card prompt now
+explicitly rejects extra headings and analysis. The pass count did not change
+because the before run was already perfect.
 <!-- If it made things worse, say that. Honestly reported, that earns full
      credit and is more interesting than one that worked. -->
 
@@ -451,7 +474,14 @@ full. -->
 ---
 
 ## What's Still Broken
-
+No acceptance criterion was missed in either the before or after run, so there
+is no failed criterion requiring a repair. The environment still reports Python
+3.14 as unsupported by the pinned package policy, even though the evaluation
+completed successfully; I would rebuild the virtual environment with Python
+3.13 before relying on this project elsewhere. I stopped there because it is
+an environment/setup issue rather than an agent behavior failure, and changing
+the system interpreter would be outside the single-code-improvement scope of
+this evaluation.
 <!-- For each criterion still missed: what you'd do, and why you stopped where
      you did. "I ran out of time" is fine if it's true. Pretending nothing is
      left is not. -->
