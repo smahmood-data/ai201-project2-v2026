@@ -203,9 +203,10 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
         return "No outfit suggestion was available to turn into a fit card."
 
     prompt = (
-        "Write a 2-to-4 sentence social-media caption for this thrift find. "
-        "Mention the item title, its price, and its platform once each. "
-        "Describe the outfit's vibe and make it sound like a real post, not "
+        "Write ONLY a 2-to-4 sentence social-media caption for this thrift "
+        "find—no headings, bullets, analysis, or extra text. Mention the item "
+        "title, its price, and its platform once each. Describe the outfit's "
+        "vibe and make it sound like a real post, not "
         f"a product listing. Item: {json.dumps(new_item, ensure_ascii=False)}. "
         f"Outfit suggestion: {outfit}"
     )

@@ -325,6 +325,37 @@ targets were met without lowering any criterion. Criterion 4 is the target I
 would tighten next: because all five captions met the requirements, its target
 could reasonably become 5 of 5 rather than 4 of 5.
 
+## Run Log — After
+
+The one improvement was a prompt-only change in `tools.py::create_fit_card`:
+it now requests only a 2-to-4 sentence caption with no headings, bullets,
+analysis, or extra text, while naming the item, price, platform, and vibe.
+
+| Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
+|---|---|---|---|---|---|---|---|
+| 1. Full three-tool run returns a fit card | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 2. Empty search stops before `suggest_outfit` | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 3. Item in session matches item passed on | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 4. Fit card meets caption requirements | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 5. Over-budget search returns nothing over limit | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+
+Real output from `results/run_2026-10-21_1904_after.md`, produced by
+`run_eval.py::run_once` calling `agent.py::run_agent`:
+
+```
+matching query completes — Try 1: completed — fit card 291 chars
+[3] create_fit_card
+      out: Channeling peak 2000s popstar energy with this Y2K Baby Tee — Butterfly Print scored on depop for just $18.00.…
+impossible query stops early — Try 1: stopped early — No listings matched. Try changing the description, size, or
+selected item survives handoff — Try 1: completed — fit card 250 chars
+fit card repeats same item — Try 1: completed — fit card 278 chars
+price ceiling is respected — Try 1: stopped early — No listings matched. Try changing the description, size, or
+```
+
+The improvement helped qualitatively: the pass counts stayed at 5/5, while the
+fit-card prompt now explicitly constrains formatting and excludes extra model
+analysis. It did not change the already-perfect pass-rate result.
+
 ---
 
 ## Loop Trace
