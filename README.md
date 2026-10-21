@@ -131,6 +131,11 @@ $ .venv/bin/python -c "import agent; from utils.data_loader import get_example_w
 
 ```
 
+The `search_listings` call in this run goes through `mcp_client.call_tool`.
+`python mcp_client.py` listed the registered tool with `description` (string),
+optional `size` (string), and optional `max_price` (number); its returned IDs
+and empty-list behavior matched the direct tool test.
+
 **The three tools, tested one at a time**
 
 ```
