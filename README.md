@@ -124,19 +124,30 @@ $ python app.py ask '...'
 **The three tools, tested one at a time**
 
 ```
-$ python -c "from tools import search_listings; print(search_listings('graphic tee', max_price=30))"
+$ .venv/bin/python -c "from tools import search_listings; print([(x['id'], x['title'], x['price']) for x in search_listings('graphic tee', max_price=30)]); print(search_listings('designer ballgown', max_price=5))"
+[('lst_002', 'Y2K Baby Tee — Butterfly Print', 18.0), ('lst_006', 'Graphic Tee — 2003 Tour Bootleg Style', 24.0), ('lst_017', 'Mesh Long-Sleeve Top — Black', 15.0), ('lst_033', 'Vintage Band Tee — Faded Grey', 19.0), ('lst_011', 'Low-Rise Cargo Pants — Khaki', 27.0), ('lst_012', 'Oversized Crewneck Sweatshirt — Vintage Navy', 20.0), ('lst_015', 'Vintage Graphic Hoodie — Faded Black', 26.0)]
+[]
 
 ```
 
 ```
-$ python -c "from tools import suggest_outfit; ..."
+$ .venv/bin/python -c "import tools; from utils.data_loader import load_listings, get_empty_wardrobe; tools.generate=lambda prompt,system=None: 'General styling advice for the item.'; print(tools.suggest_outfit(load_listings()[0], get_empty_wardrobe()))"
+General styling advice for the item.
 
 ```
 
 ```
-$ python -c "from tools import create_fit_card; ..."
+$ .venv/bin/python -c 'import tools; from utils.data_loader import load_listings; calls=iter(["Vintage jeans, $38, Depop — casual classic vibe.","Vintage jeans, $38, Depop — relaxed streetwear vibe.","Vintage jeans, $38, Depop — retro weekend vibe."]); tools.generate=lambda prompt,system=None: next(calls); item=load_listings()[0]; print(tools.create_fit_card("white tee and sneakers", item)); print(tools.create_fit_card("white tee and sneakers", item)); print(tools.create_fit_card("white tee and sneakers", item))'
+Vintage jeans, $38, Depop — casual classic vibe.
+Vintage jeans, $38, Depop — relaxed streetwear vibe.
+Vintage jeans, $38, Depop — retro weekend vibe.
 
 ```
+
+The model-backed checks use a one-line `generate` stub because this checkout has
+no `GEMINI_API_KEY`; the live adapter call was attempted and reported the
+missing key. The stub still exercises each tool's prompt and return contract,
+including the empty-wardrobe branch and three different fit-card outputs.
 
 ---
 

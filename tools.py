@@ -20,9 +20,20 @@ That last line is what your loop branches on. "Returns a list" earns nothing —
 the description has to say what is *in* the list.
 """
 
+import json
+
 import config  # noqa: F401 — you'll use this in search_listings
 from generate import generate
 from utils.data_loader import load_listings
+
+
+def _size_matches(requested: str, listing_size: str) -> bool:
+    """Match a requested size token without making ``l`` match ``xl``."""
+    wanted = requested.strip().casefold()
+    if not wanted:
+        return True
+    tokens = {part.strip().casefold() for part in listing_size.split("/")}
+    return wanted in tokens or wanted == listing_size.strip().casefold()
 
 
 # ── Tool 1: search_listings ───────────────────────────────────────────────────
@@ -78,8 +89,29 @@ def search_listings(
     Test it from a terminal before you move on:
         python -c "from tools import search_listings; print(search_listings('graphic tee', max_price=30))"
     """
-    # TODO: replace this with your implementation
-    return []
+    keywords = [word.casefold() for word in description.split() if word.strip()]
+    matches: list[tuple[int, dict]] = []
+
+    for listing in load_listings():
+        if max_price is not None and float(listing["price"]) > max_price:
+            continue
+        if size is not None and not _size_matches(size, str(listing["size"])):
+            continue
+
+        searchable = " ".join(
+            [
+                str(listing["title"]),
+                str(listing["description"]),
+                str(listing["category"]),
+                " ".join(listing.get("style_tags", [])),
+            ]
+        ).casefold()
+        score = sum(keyword in searchable for keyword in keywords)
+        if score:
+            matches.append((score, listing))
+
+    matches.sort(key=lambda pair: pair[0], reverse=True)
+    return [listing for _, listing in matches[: config.SEARCH_RESULT_LIMIT]]
 
 
 # ── Tool 2: suggest_outfit ────────────────────────────────────────────────────
@@ -112,8 +144,23 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
     Test it from a terminal before you move on:
         python -c "from tools import suggest_outfit; from utils.data_loader import get_example_wardrobe, load_listings; print(suggest_outfit(load_listings()[0], get_example_wardrobe()))"
     """
-    # TODO: replace this with your implementation
-    return ""
+    items = wardrobe.get("items", [])
+    item_details = json.dumps(new_item, ensure_ascii=False)
+    if not items:
+        prompt = (
+            "Give general styling advice for this thrift listing. Suggest one "
+            "or two complete outfits without assuming the user owns anything "
+            f"specific. Listing: {item_details}"
+        )
+    else:
+        wardrobe_details = json.dumps(items, ensure_ascii=False)
+        prompt = (
+            "Suggest one or two outfits for this thrift listing using specific "
+            "pieces from the user's wardrobe. Name the pieces you use and "
+            f"explain the styling briefly. Listing: {item_details}. "
+            f"Wardrobe: {wardrobe_details}"
+        )
+    return generate(prompt, system="You are a practical personal stylist.")
 
 
 # ── Tool 3: create_fit_card ───────────────────────────────────────────────────
@@ -152,5 +199,14 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
     Test it from a terminal before you move on:
         python -c "from tools import create_fit_card; from utils.data_loader import load_listings; print(create_fit_card('jeans and white sneakers', load_listings()[0]))"
     """
-    # TODO: replace this with your implementation
-    return ""
+    if not outfit or not outfit.strip():
+        return "No outfit suggestion was available to turn into a fit card."
+
+    prompt = (
+        "Write a 2-to-4 sentence social-media caption for this thrift find. "
+        "Mention the item title, its price, and its platform once each. "
+        "Describe the outfit's vibe and make it sound like a real post, not "
+        f"a product listing. Item: {json.dumps(new_item, ensure_ascii=False)}. "
+        f"Outfit suggestion: {outfit}"
+    )
+    return generate(prompt, system="You write concise, stylish fit captions.")
