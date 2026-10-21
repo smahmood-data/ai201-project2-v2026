@@ -13,8 +13,8 @@
 > python app.py ask 'vintage graphic tee under $30'
 > ```
 >
-> All three tools are stubs, so that last command will do nothing useful yet.
-> That's the starting position.
+> The tools and planning loop are now implemented; this command runs a real
+> query when the environment has a configured model key.
 >
 > **The rest of this file is your submission.** Fill it in as you go.
 
@@ -126,8 +126,9 @@ result becomes `selected_item`, that item and `wardrobe` produce
 **One full query**
 
 ```
-$ .venv/bin/python -c "import agent; from utils.data_loader import get_example_wardrobe; seen=[]; agent.suggest_outfit=lambda item,wardrobe: (seen.append(item['id']) or 'jeans and sneakers'); agent.create_fit_card=lambda outfit,item: 'Fit card for ' + item['id']; session=agent.run_agent('vintage graphic tee under \$30', get_example_wardrobe()); print({'parsed':session['parsed'],'selected_item':session['selected_item']['id'],'suggest_outfit_received':seen[0],'outfit_suggestion':session['outfit_suggestion'],'fit_card':session['fit_card']})"
-{'parsed': {'description': 'vintage graphic tee', 'size': None, 'max_price': 30.0}, 'selected_item': 'lst_002', 'suggest_outfit_received': 'lst_002', 'outfit_suggestion': 'jeans and sneakers', 'fit_card': 'Fit card for lst_002'}
+$ .venv/bin/python -c "from tools import suggest_outfit; from utils.data_loader import load_listings, get_empty_wardrobe; result=suggest_outfit(load_listings()[0], get_empty_wardrobe()); print('non_empty=', bool(result)); print(result[:180].replace('\\n',' '))"
+non_empty= True
+Hey there! As your practical stylist, I can tell you that vintage Levi's 501s (especially in a medium wash with a bit of knee fading) are the ultimate wardrobe workhorse. Because t
 
 ```
 
@@ -146,23 +147,37 @@ $ .venv/bin/python -c "from tools import search_listings; print([(x['id'], x['ti
 ```
 
 ```
-$ .venv/bin/python -c "import tools; from utils.data_loader import load_listings, get_empty_wardrobe; tools.generate=lambda prompt,system=None: 'General styling advice for the item.'; print(tools.suggest_outfit(load_listings()[0], get_empty_wardrobe()))"
-General styling advice for the item.
+$ .venv/bin/python app.py ask 'vintage graphic tee under $30' --empty-wardrobe --trace
+[1] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: 10 items: Y2K Baby Tee — Butterfly Print, Graphic Tee — 2003 Tour Bootleg Style, Vintage Band Tee — Faded Grey … +7 more
+[2] suggest_outfit
+      in:  dict with keys: new_item, wardrobe
+      out: Hey there! As your practical stylist, I’m excited to help you style this piece.   ### Styling Strategy for a Y…
+[3] create_fit_card
+      in:  dict with keys: outfit, new_item
+      out: Found the ultimate off-duty model fit for iced coffee runs. Paired this dreamy Y2K Baby Tee — Butterfly Print …
+  Found:    Y2K Baby Tee — Butterfly Print — $18.0 on depop
+  Fit card: Found the ultimate off-duty model fit for iced coffee runs. Paired this dreamy Y2K Baby Tee — Butterfly Print with low-rise denim and chunky sneakers for that effortless early-2000s energy. Grabbed it for just $18 over on depop—runs and stays in my cart. ✨🦋
 
 ```
 
 ```
-$ .venv/bin/python -c 'import tools; from utils.data_loader import load_listings; calls=iter(["Vintage jeans, $38, Depop — casual classic vibe.","Vintage jeans, $38, Depop — relaxed streetwear vibe.","Vintage jeans, $38, Depop — retro weekend vibe."]); tools.generate=lambda prompt,system=None: next(calls); item=load_listings()[0]; print(tools.create_fit_card("white tee and sneakers", item)); print(tools.create_fit_card("white tee and sneakers", item)); print(tools.create_fit_card("white tee and sneakers", item))'
-Vintage jeans, $38, Depop — casual classic vibe.
-Vintage jeans, $38, Depop — relaxed streetwear vibe.
-Vintage jeans, $38, Depop — retro weekend vibe.
+$ AI201_CACHE=0 .venv/bin/python -c 'from tools import create_fit_card; from utils.data_loader import load_listings; item=load_listings()[0]; outfit="white tee, baggy jeans, and chunky sneakers"; print(create_fit_card(outfit,item)); print("---"); print(create_fit_card(outfit,item)); print("---"); print(create_fit_card(outfit,item))'
+Nothing beats the way a worn-in pair of Vintage Levi's 501 Jeans hugs just right. Scored these on depop for $38, and the faded knees give them that effortless, I-stole-them-from-the-mens-section energy. Paired with a crisp white tee and chunky kicks for the ultimate off-duty streetwear uniform.
+---
+Nothing beats the wash on these Vintage Levi's 501 Jeans—that knee fade is pure gold. Styled with a crisp white tee and chunky sneakers for the ultimate off-duty streetwear look. Snagged this pair for just $38 on depop.
+---
+Scored these Vintage Levi's 501 Jeans for just $38 and I am never taking them off. Styled them with a crisp white tee and chunky sneakers for that effortlessly lived-in streetwear look. Snagged this exact pair over on Depop before anyone else could.
 
 ```
 
-The model-backed checks use a one-line `generate` stub because this checkout has
-no `GEMINI_API_KEY`; the live adapter call was attempted and reported the
-missing key. The stub still exercises each tool's prompt and return contract,
-including the empty-wardrobe branch and three different fit-card outputs.
+The model-backed checks above used the configured `.env` key and real adapter
+calls. `AI201_CACHE=0` made the three fit-card calls independent; all three
+returned different wording. A temporary invalid process-only key on the unique
+query `vintage graphic tee under $29` produced: `The model could not be reached
+while creating the outfit advice. Check GEMINI_API_KEY and try again.` The real
+`.env` file was not changed.
 
 ---
 
