@@ -312,15 +312,18 @@ Query: graphic tee under $5
 
 | # | Criterion | Target | Verdict | How I decided |
 |---|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
-| 4 |  |  |  |  |
-| 5 |  |  |  |  |
+| 1 | Full three-tool run returns a fit card | 4 of 5 | MET (5/5) | All five matching-query tries completed search, outfit advice, and fit-card generation. |
+| 2 | Empty search stops before `suggest_outfit` | 5 of 5 | MET (5/5) | All five impossible-query traces stopped after the empty MCP search and named changeable constraints. |
+| 3 | Item in session matches item passed on | 5 of 5 | MET (5/5) | All five state-handoff runs selected the first search result, and the next trace step used that selected listing. |
+| 4 | Fit card meets caption requirements | 4 of 5 | MET (5/5) | All five fit cards were short captions naming the item, price, platform, and outfit vibe; wording varied because caching was off. |
+| 5 | Over-budget search returns nothing over limit | 5 of 5 | MET (5/5) | All five under-$5 searches returned an empty result, so no returned price could exceed the ceiling. |
 
 **Diagnoses**
 
-
+There were no misses, so there is no failed step or mechanism to diagnose. The
+targets were met without lowering any criterion. Criterion 4 is the target I
+would tighten next: because all five captions met the requirements, its target
+could reasonably become 5 of 5 rather than 4 of 5.
 
 ---
 
